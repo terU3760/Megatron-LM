@@ -18,15 +18,6 @@ def load(args):
 
     # Check if cuda 11 is installed for compute capability 8.0
     cc_flag = []
-    _, bare_metal_major, bare_metal_minor = _get_cuda_bare_metal_version(
-        cpp_extension.CUDA_HOME
-    )
-    if int(bare_metal_major) >= 11:
-        cc_flag.append('-gencode')
-        cc_flag.append('arch=compute_80,code=sm_80')
-        if int(bare_metal_minor) >= 8:
-            cc_flag.append('-gencode')
-            cc_flag.append('arch=compute_90,code=sm_90')
 
     # Build path
     srcpath = pathlib.Path(__file__).parent.absolute()
@@ -44,9 +35,8 @@ def load(args):
             ],
             extra_cuda_cflags=[
                 "-O3",
-                "-gencode",
-                "arch=compute_70,code=sm_70",
-                "--use_fast_math",
+                "--amdgpu-target=gfx90a",
+                "--no-offload-arch=gfx1030"
             ]
             + extra_cuda_flags
             + cc_flag,

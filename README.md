@@ -59,13 +59,20 @@ The following table shows both model (MFU) and hardware (HFU) FLOPs utilization 
       * [Collecting GPT Webtext Data](#collecting-gpt-webtext-data)
    * [Reproducibility](#reproducibility)
 
-# Setup
+# Setup(on ROCm)
 We strongly recommend using the latest release of [NGC's PyTorch container](https://ngc.nvidia.com/catalog/containers/nvidia:pytorch) with DGX nodes. If you can't use this for some reason, use the latest pytorch, cuda, nccl, and NVIDIA [APEX](https://github.com/NVIDIA/apex#quick-start) releases.  Data preprocessing requires [NLTK](https://www.nltk.org/install.html), though this is not required for training, evaluation, or downstream tasks.
 
 You can launch an instance of the PyTorch container and mount Megatron, your dataset, and checkpoints with the following Docker commands:
 ```
-docker pull nvcr.io/nvidia/pytorch:xx.xx-py3
-docker run --gpus all -it --rm -v /path/to/megatron:/workspace/megatron -v /path/to/dataset:/workspace/dataset -v /path/to/checkpoints:/workspace/checkpoints nvcr.io/nvidia/pytorch:xx.xx-py3
+docker pull rocm/pytorch:rocm5.6_ubuntu20.04_py3.8_pytorch_2.0.1
+
+docker run -it --network=host --privileged --device=/dev/kfd --device=/dev/dri --group-add video --cap-add=SYS_PTRACE --shm-size=128G --security-opt seccomp=unconfined rocm/pytorch:rocm5.6_ubuntu20.04_py3.8_pytorch_2.0.1
+```
+## Install Apex
+```
+git clone https://github.com/ROCmSoftwarePlatform/apex.git
+
+python setup.py install --cpp_ext --cuda_ext
 ```
 
 ## Downloading Checkpoints
@@ -519,3 +526,11 @@ There are currently three known Megatron optimizations that break reproducibilit
 3. Flash attention is non-deterministic. If reproducibility is required do not use `--use-flash-attn`.
 
 These sources of non-determinism are under active investigation. If you observe non-determinism in Megatron training under other circumstances please open an issue.
+
+## Simple example of training
+Suppose codeparrot dataset is in "/dataset/codeparrot/codeparrot_content_document"
+```
+export CUDA_DEVICE_MAX_CONNECTIONS=1
+
+sh 1st_test_run_use_env.sh
+```
